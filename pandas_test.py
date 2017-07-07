@@ -1,6 +1,8 @@
 import pandas as pd
 from  cPickle import load, dump
 import matplotlib.pyplot as plt
+import matplotlib.dates as dts
+from dateutil import parser
 
 
 def read_csv():
@@ -25,11 +27,11 @@ def read_csv():
 	dump(rawcensustractandblock,f)
 	f.close()
 
-def load_pickle():
+def load_pickle(first=True,second=True):
 	print "Loading dumped objects"
 	f = open("pandas.dump","rb")
-	logerror = load(f)
-	rawcensustractandblock = load(f)
+	logerror = load(f) if first else None
+	rawcensustractandblock = load(f) if second else None
 	f.close()
 	print "done"
 	return logerror, rawcensustractandblock
@@ -40,42 +42,100 @@ def scatter_plot(x,y):
 
 
 
-logerror, rawcensustractandblock = load_pickle()
-x = []
-y = []
-print "Processing scatter plot ... "
-for key in logerror.keys():
-	census = rawcensustractandblock[key]
-	if not census: continue
-	if type(census) is not str: continue
-	if "." not in census: continue
-	###val = int(census.split(".")[-1])
-	val = int(census.split(".")[0])
-	x.append(val)
-	y.append(logerror[key][0])
-print "done"
-#scatter_plot(x,y)
+def run_census_analysis():
+	logerror, rawcensustractandblock = load_pickle()
+	x = []
+	y = []
+	print "Processing scatter plot ... "
+	for key in logerror.keys():
+		census = rawcensustractandblock[key]
+		if not census: continue
+		if type(census) is not str: continue
+		if "." not in census: continue
+		###val = int(census.split(".")[-1])
+		val = int(census.split(".")[0])
+		x.append(val)
+		y.append(logerror[key][0])
+	print "done"
+	#scatter_plot(x,y)
 
-vals1 = {}
-vals2 = {}
-for key, val in rawcensustractandblock.iteritems():
-	if type(val) is not str: continue
-	if "." not in val: continue
-	if key not in logerror: continue
-	val1, val2 = [int(item) for item in val.split(".") ]
-	vals1.setdefault(val1,0)
-	vals1[val1]+=1
-	vals2.setdefault(val2,0)
-	vals2[val2]+=1
+	vals1 = {}
+	vals2 = {}
+	for key, val in rawcensustractandblock.iteritems():
+		if type(val) is not str: continue
+		if "." not in val: continue
+		if key not in logerror: continue
+		val1, val2 = [int(item) for item in val.split(".") ]
+		vals1.setdefault(val1,0)
+		vals1[val1]+=1
+		vals2.setdefault(val2,0)
+		vals2[val2]+=1
 
-v1 = [value for key, value in vals1.iteritems()]
-v2 = [value for key, value in vals2.iteritems()]
-v1.sort(reverse=True)
-v2.sort(reverse=True)
+	v1 = [value for key, value in vals1.iteritems()]
+	v2 = [value for key, value in vals2.iteritems()]
+	v1.sort(reverse=True)
+	v2.sort(reverse=True)
 
-len([i for i in v2 if i>20])
-len([i for i in v1 if i>20])
+	len([i for i in v2 if i>20])
+	len([i for i in v1 if i>20])
 
+def run_time_analysis():
+	logerror = load_pickle(first = True, second = False)[0]
+	x = []
+	y = []
+	#meandates = [parser.parse("%04d%02d%02d"%(year,month,day))  for year in xrange(2016,2018) for month in xrange(1,13) for day in xrange(1,31,5)]
+	meandates = [parser.parse("%04d%02d01"%(year,month))  for year in xrange(2016,2018) for month in xrange(1,13)]
+	means = {}
+	print "Processing scatter plot ... "
+	for key in logerror.keys():
+		error, date = logerror[key]
+		date = parser.parse(date)
+		x.append(date)
+		y.append(error)
+
+		# mean values
+		for i in xrange(len(meandates)-1):
+			#if meandates[i]<= date and date<=meandates[i]:
+			if meandates[i]<= date and date<=meandates[i+1]:
+				means.setdefault(meandates[i],[])
+				means[meandates[i]].append(error)
+				break
+	print "done"
+	dates = x
+	x = dts.date2num(x)
+
+	x2, y2, y2_2 = [], [], []
+	for key, value in means.iteritems():
+		x2.append(key)
+		mean  = sum(value)*1.0/len(value)
+		mean2 = sum([val**2 for val in value])*1.0/len(value)
+		y2.append(mean)
+		y2_2.append((mean2 - mean**2)**0.5)
+	x2 = dts.date2num(x2)
+	"""
+	meandates = [parser.parse("%04d%02d%02d"%(year,month,day))  for year in xrange(2016,2018) for month in xrange(1,13) for day in xrange(1,31,5)]
+	means = {}
+	for date, val in zip(dates,y):
+		for i in xrange(len(meandates)-1):
+			if meandates[i]<= date and date<=meandates[i]:
+				means.setdefault(meandates[i],[])
+				means[meandates[i]].append(val)
+				break
+
+	x2, y2 = [], []
+	for key, value in means.iteritems():
+		x2.append(key)
+		y2.append()
+		
+	"""	
+	plt.plot_date(x, y)
+	plt.plot_date(x2, y2,color="red")
+	plt.plot_date(x2, y2_2,color="green")
+	plt.show()
+	
+	
+#run_census_analysis()
+run_time_analysis()
 
 
 
