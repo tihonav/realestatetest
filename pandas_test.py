@@ -3,6 +3,8 @@ from  cPickle import load, dump
 import matplotlib.pyplot as plt
 import matplotlib.dates as dts
 from dateutil import parser
+import sys
+import math
 
 
 def read_csv():
@@ -27,6 +29,15 @@ def read_csv():
 	dump(rawcensustractandblock,f)
 	f.close()
 
+def read_csv_propertyzoningdesc():
+	p = pd.read_csv("properties_2016.csv",dtype=str)
+	propertyzoningdesc = {}
+	for i in xrange(p["parcelid"].count()):
+		propertyzoningdesc[int(p.get_value(i,'parcelid'))] = p.get_value(i,'propertyzoningdesc')
+	f = open("propertyzoningdesc.dump","wb")
+	dump(propertyzoningdesc,f)
+	f.close()
+
 def load_pickle(first=True,second=True):
 	print "Loading dumped objects"
 	f = open("pandas.dump","rb")
@@ -35,6 +46,13 @@ def load_pickle(first=True,second=True):
 	f.close()
 	print "done"
 	return logerror, rawcensustractandblock
+
+def load_pickle_propertyzoningdesc():
+	print "Loading dumped objects"
+	f = open("propertyzoningdesc.dump","rb")
+	propertyzoningdesc = load(f)
+	print "done"
+	return propertyzoningdesc
 
 def scatter_plot(x,y):
 	plt.plot(x, y, "o")
@@ -76,8 +94,8 @@ def run_census_analysis():
 	v1.sort(reverse=True)
 	v2.sort(reverse=True)
 
-	len([i for i in v2 if i>20])
-	len([i for i in v1 if i>20])
+	print len([i for i in v2 if i>20])
+	print len([i for i in v1 if i>20])
 
 def run_time_analysis():
 	logerror = load_pickle(first = True, second = False)[0]
@@ -132,12 +150,44 @@ def run_time_analysis():
 	plt.plot_date(x2, y2,color="red")
 	plt.plot_date(x2, y2_2,color="green")
 	plt.show()
+
+
+def run_propertyzoningdesc_analysis():
+	logerror = load_pickle(first = True, second = False)[0]
+	propertyzoningdesc = load_pickle_propertyzoningdesc()
+	#for key in logerror.keys():
+	#	zone = propertyzoningdesc[key]
+	#	if not zone: zone = None
+
+	vals = {}
+	print "processing ... "
+	index = 0
+	for key in logerror.keys():
+		sys.stdout.write("\r%4.1f"%(100.*index / len(logerror.keys())))
+		sys.stdout.flush()
+		index +=1
+		#if type(val) is not str: continue
+		#if "." not in val: continue
+		#val1, val2 = [int(item) for item in val.split(".") ]
+		#if key not in logerror: continue
+		val = propertyzoningdesc[key]
+		if not val: val = None
+		if type(val)==str: val = val.strip()
+		elif type(val)==float and math.isnan(val): val = None
+		vals.setdefault(val,0)
+		vals[val]+=1
+	print "done"
+
+	v = [[key,value] for key, value in vals.iteritems()]
+	v.sort(reverse=True,key=lambda x: x[1])
+	#print len([i for i in v if i[1]>20])
+	print len([i for i in v if i[1]>200])
+	return v
 	
 	
 #run_census_analysis()
-run_time_analysis()
-
-
+#run_time_analysis()
+v = run_propertyzoningdesc_analysis()
 
 
 
