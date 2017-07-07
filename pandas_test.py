@@ -38,6 +38,24 @@ def read_csv_propertyzoningdesc():
 	dump(propertyzoningdesc,f)
 	f.close()
 
+def convert_to_float(value):
+	try:
+		result =  float(value)
+	except:
+		result =  None
+	return result
+
+
+def read_csv_finishedfloor1squarefeet():
+	p = pd.read_csv("properties_2016.csv",dtype=str)
+	finishedfloor1squarefeet = {}
+	for i in xrange(p["parcelid"].count()):
+		finishedfloor1squarefeet[int(p.get_value(i,'parcelid'))] = convert_to_float(p.get_value(i,'finishedfloor1squarefeet')) 
+	f = open("finishedfloor1squarefeet.dump","wb")
+	dump(finishedfloor1squarefeet,f)
+	f.close()
+	
+
 def load_pickle(first=True,second=True):
 	print "Loading dumped objects"
 	f = open("pandas.dump","rb")
@@ -53,6 +71,13 @@ def load_pickle_propertyzoningdesc():
 	propertyzoningdesc = load(f)
 	print "done"
 	return propertyzoningdesc
+
+def load_pickle_finishedfloor1squarefeet():
+	print "Loading dumped objects"
+	f = open("finishedfloor1squarefeet.dump","rb")
+	finishedfloor1squarefeet = load(f)
+	print "done"
+	return finishedfloor1squarefeet
 
 def scatter_plot(x,y):
 	plt.plot(x, y, "o")
@@ -99,6 +124,7 @@ def run_census_analysis():
 
 def run_time_analysis():
 	logerror = load_pickle(first = True, second = False)[0]
+	#propertyzoningdesc = load_pickle_propertyzoningdesc()
 	x = []
 	y = []
 	#meandates = [parser.parse("%04d%02d%02d"%(year,month,day))  for year in xrange(2016,2018) for month in xrange(1,13) for day in xrange(1,31,5)]
@@ -106,6 +132,11 @@ def run_time_analysis():
 	means = {}
 	print "Processing scatter plot ... "
 	for key in logerror.keys():
+
+		#zone = propertyzoningdesc[key]
+		#if type(zone)!=str: continue
+		#if zone.strip()!='LAR1': continue
+
 		error, date = logerror[key]
 		date = parser.parse(date)
 		x.append(date)
@@ -183,11 +214,63 @@ def run_propertyzoningdesc_analysis():
 	#print len([i for i in v if i[1]>20])
 	print len([i for i in v if i[1]>200])
 	return v
+
+def run_finishedfloor1squarefeet_analysis():
+	logerror = load_pickle(first = True, second = False)[0]
+	finishedfloor1squarefeet = load_pickle_finishedfloor1squarefeet()
+
+	print "processing ... "
+	index = 0
+	x,y = [], []
+	for key in logerror.keys():
+		sys.stdout.write("\r%4.1f"%(100.*index / len(logerror.keys())))
+		sys.stdout.flush()
+		index +=1
+		#if index > 1000: break
+		val = finishedfloor1squarefeet[key]
+		if val is None: continue
+		if math.isnan(val): continue
+
+		error = logerror[key][0]
+		x.append(val)
+		y.append(error)
+	minx = min(x)
+	maxx = max(x)
+	nstaps = 20
+	meanintervals = [minx + (maxx-minx)*1.0/nstaps * i  for i in xrange(nstaps)]
+	meanvalues    = {}
+	for ax, ay in zip(x,y):
+		for i in xrange(len(meanintervals)-1):
+			#print meanintervals[i], meanintervals[i+1], ax
+			
+			if meanintervals[i] <= ax and  ax < meanintervals[i+1]:
+				meanvalues.setdefault(meanintervals[i],[])
+				meanvalues[meanintervals[i]].append(ay)
+	#print meanvalues
+
+	x2, y2, y2_2 = [], [], []
+	for key, value in meanvalues.iteritems():
+		x2.append(key)
+		mean  = sum(value)*1.0/len(value)
+		mean2 = sum([val**2 for val in value])*1.0/len(value)
+		y2.append(mean)
+		y2_2.append((mean2 - mean**2)**0.5)
+	
+	
+	#scatter_plot(x,y
+	plt.plot(x, y, "o")
+	plt.plot(x2, y2, "o",color="red")
+	plt.plot(x2, y2_2, "o", color = "green")
+	plt.show()
+	
+
 	
 	
 #run_census_analysis()
 #run_time_analysis()
-v = run_propertyzoningdesc_analysis()
+#v = run_propertyzoningdesc_analysis()
+#read_csv_finishedfloor1squarefeet()
+run_finishedfloor1squarefeet_analysis()
 
 
 
