@@ -70,7 +70,8 @@ void is_lower(char c )
 
 void test_lambda() 
 {
-	char s[]="Hello World!";
+	//char s[]="Hello World!";
+	auto s="Hello World!";
 	int Uppercase = 0; //modified by the lambda
 	for_each(s, s+sizeof(s), [&Uppercase] (char c) {
 		if (isupper(c))
@@ -78,6 +79,9 @@ void test_lambda()
 	});
 	cout<< Uppercase<<" uppercase letters in: "<< s<<endl;
 	for_each(s, s+sizeof(s), is_lower); 
+	for_each(s, s+sizeof(s), [](char a){if(islower(a)) cout<<"Lower2: "<<a<<endl;}); 
+	auto  test_func = [](int x, int  y){ return x+y; } ;
+	//auto glambda = [](auto a, auto&& b) { return a < b; };// NOT ALLOWED IN C++11
 }
 
 
