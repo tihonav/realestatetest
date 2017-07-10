@@ -1,5 +1,8 @@
 // g++ -o test test.cpp 
 
+
+
+// TEMPLATE TESTS
 #include <vector>
 #include <iostream>
 
@@ -26,11 +29,56 @@ template<class K> void C<K>::f() {
 	cout<<(*p).i<<endl;
 }
 
+
+
+
+
+// MACRO
+#define TEST(x,y) void wow(int x, int y)
+
+
+TEST(a1,b2)
+{
+	std::cout<<"huest"<< a1 <<"  "<<  b2 <<"!\n";
+}
+
+
+
+
+
+
+
+// STRUCTURE CONSTRUCTORS
+struct a
+{
+	int i;
+	a(int i1)
+	{
+		i = i1;
+	}
+	a(const a &  a1){i = a1.i -1;}
+	a& operator=(const a &  a1){i = a1.i + 1; return *this;}
+	
+};
+
+
 int main()
 {
 	
-	C<int> a(100);
+	// Templates
+	C<int> aaaa(100);
 	cout<<"Test: "<<endl;
-	a.f();
+	aaaa.f();
+
+
+	// structure constructors
+	std::cout << "Hello World! " << std::endl;
+	a test(1);
+	a test2  = test;
+	std::cout << test2.i << std::endl;
+
+	// macro
+	wow(100,200);
+
 	return 0;
 }
