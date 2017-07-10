@@ -59,6 +59,8 @@ struct a
 	}
 	a(const a &  a1){i = a1.i -1;}
 	a& operator=(const a &  a1){i = a1.i + 1; return *this;}
+
+	//a&& operator=(a&& a1) = {return a1}; 
 	
 };
 
@@ -85,6 +87,33 @@ void test_lambda()
 }
 
 
+// INLINE INITIALIZATION
+class MyInline
+{
+	int i=10; // C++11 only
+};
+
+
+
+// RVALUE REFERENCES
+class Movable
+{
+public:		
+		int i; /// =100;
+		Movable(int j){i=j;}
+		//Movable(Movable&& a) = deleted;
+		//Movable() = default;
+		Movable(Movable&& a ){a.i += 1000; i=a.i;} //move constructor
+		Movable(Movable& a ){i=a.i -10;} //move constructor
+		//Movable&& operator=(Movable&&); //move assignment operator
+};
+
+Movable func(Movable a)
+{
+	return a;
+}
+
+
 int main()
 {
 	
@@ -99,6 +128,9 @@ int main()
 	a test(1);
 	a test2  = test;
 	std::cout << test2.i << std::endl;
+	a test3(100); 
+	test3 = test;
+	std::cout << test3.i << std::endl;
 
 	// macro
 	wow(100,200);
@@ -120,5 +152,48 @@ int main()
 	for(auto i=arr4.begin();i!=arr4.end();i++){cout<<(*i);}; cout<<endl; 
 	for_each(arr3, arr3 + sizeof(arr3), [](int i) {cout<<i;}); cout<<endl; 
 
+	// inline initialization 
+	MyInline myinline{};
+
+	// nul pointers
+	int (MyInline::*pmf)()=nullptr; //pointer to member function
+
+	// rvalue references
+	//Movable mov0;
+	Movable mov1(100);
+	Movable mov3(mov1);
+	Movable mov2(func(mov1));
+	//mov1.i++;
+	cout<<"Mov1: "<<mov1.i<<endl;
+	cout<<"Mov2: "<<mov2.i<<endl;
+	cout<<"Mov3: "<<mov3.i<<endl;
+
+
+
+
 	return 0;
 }
+
+
+// CHECK ALSO NULL POINTERS
+// https://blog.smartbear.com/c-plus-plus/the-biggest-changes-in-c11-and-why-you-should-care/
+/*
+constt char *pc=str.c_str(); //data pointers
+if (pc!=nullptr)
+  cout<<pc<<endl;
+
+int (A::*pmf)()=nullptr; //pointer to member function
+void (*pmf)()=nullptr; //pointer to function
+*/
+
+// CONSTRUCTOR DELEGATION IS ALLOWED
+/*
+class M //C++11 delegating constructors
+{
+ int x, y;
+  char *p;
+  public:
+   M(int v) : x(v), y(0), p(new char [MAX]) {} //#1 target
+    M(): M(0) {cout<<"delegating ctor"<<endl;} //#2 delegating
+	};
+*/
