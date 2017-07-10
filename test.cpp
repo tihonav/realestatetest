@@ -107,5 +107,18 @@ int main()
 	cout<<"\n\n\n";
 	test_lambda();
 
+	// decltype
+	vector<int> vec;
+	typedef decltype (vec.begin()) CIT;
+	for(CIT i=vec.begin(); i!=vec.end(); ++i){}
+
+	// brace initialization
+	int arr1[]  = {1,2,3,4}; // the same
+	int arr2[4] = {1,2,3,4}; // the same
+	int arr3[9] = {1,2,3,4}; // the same
+	vector<string> arr4 = {"one","two","three"};
+	for(auto i=arr4.begin();i!=arr4.end();i++){cout<<(*i);}; cout<<endl; 
+	for_each(arr3, arr3 + sizeof(arr3), [](int i) {cout<<i;}); cout<<endl; 
+
 	return 0;
 }
