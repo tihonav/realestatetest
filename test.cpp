@@ -1,10 +1,11 @@
 // g++ -o test test.cpp 
-
+// g++ -o -std=c++11 test test.cpp 
 
 
 // TEMPLATE TESTS
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 
@@ -61,6 +62,24 @@ struct a
 	
 };
 
+// LAMBDA EXPRESSIONS
+void is_lower(char c )
+{
+	if(islower(c)) cout<<"Lower: "<<c<<endl;
+}
+
+void test_lambda() 
+{
+	char s[]="Hello World!";
+	int Uppercase = 0; //modified by the lambda
+	for_each(s, s+sizeof(s), [&Uppercase] (char c) {
+		if (isupper(c))
+		Uppercase++;
+	});
+	cout<< Uppercase<<" uppercase letters in: "<< s<<endl;
+	for_each(s, s+sizeof(s), is_lower); 
+}
+
 
 int main()
 {
@@ -79,6 +98,10 @@ int main()
 
 	// macro
 	wow(100,200);
+
+	// lambda
+	cout<<"\n\n\n";
+	test_lambda();
 
 	return 0;
 }
