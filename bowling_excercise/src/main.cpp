@@ -1,6 +1,8 @@
 #include "bowling.h"
 
 int main() {
-    removeme();
-    return 0;
+	removeme();
+	getscore();
+	return 0;
 }
+
