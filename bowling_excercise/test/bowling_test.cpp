@@ -38,8 +38,19 @@ TEST(Bowling, ALL_SPARES_AND_WRONGINPUT)
 				"5","0","5","0","5","0",  "11", "0.1",
 				"5","0","5","0","5","6",  " 0", ""
 				"5", "sometext",
-				"0",
+				"0", "1 sd",
 				"5"};
+	ASSERT_EQ(getscore(input), 150);
+}
+
+TEST(Bowling, ALL_SPARES_AND_SPACES)
+{
+	vector<string> input = {"5","0","5","0","5","0", 
+				"5","0","5","0","5","0",  
+				"5","0","5","0","5","0\n",  
+				"\r5", 
+				"\t0",
+				"  5"};
 	ASSERT_EQ(getscore(input), 150);
 }
 

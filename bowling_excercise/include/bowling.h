@@ -5,5 +5,7 @@
 using namespace std;
 
 bool removeme();
-int getscore(vector<string> &);
+int getscore(vector<string> );
 int getscore();
+
+int getnpins(string& );
