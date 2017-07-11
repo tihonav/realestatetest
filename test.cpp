@@ -1,5 +1,5 @@
 // g++ -o test test.cpp 
-// g++ -o -std=c++11 test test.cpp 
+// g++ -std=c++11 -o test test.cpp
 
 
 // TEMPLATE TESTS
@@ -112,6 +112,22 @@ Movable func(Movable a)
 {
 	return a;
 }
+
+
+//
+// ALIAS
+// http://en.cppreference.com/w/cpp/language/type_alias
+//
+// type alias can introduce a member typedef name
+template<typename T>
+//struct Container { using value_type = T; };
+struct Container { using value_typeaaaaaaaaaaaaa = T; };  // - still works! 
+
+// which can be used in generic programming
+//template<typename Container>
+//void g(const Container& c) { typename Container::value_t n; }
+template<typename TheeeeContainer>
+void g(const TheeeeContainer& c) { typename TheeeeContainer::value_t n; }
 
 
 int main()
