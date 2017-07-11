@@ -10,13 +10,13 @@ bool removeme()
 	return true;
 }
 
-bool getscore()
+int getscore()
 {
 	vector<string> input;
 	return getscore(input);
 }
 
-bool getscore(vector<string>& input)
+int getscore(vector<string>& input)
 {
 	
 	vector<short> scores;
@@ -26,8 +26,9 @@ bool getscore(vector<string>& input)
 	while(true)
 	{
 		// get score
-		if(!input.size())
+		if(input.size())
 		{
+			break;	
 		}
 		else
 		{
@@ -55,5 +56,5 @@ bool getscore(vector<string>& input)
 	}
 
 	// All ok
-	return true;
+	return 99999;
 }

@@ -5,5 +5,5 @@
 using namespace std;
 
 bool removeme();
-bool getscore(vector<string> &);
-bool getscore();
+int getscore(vector<string> &);
+int getscore();
