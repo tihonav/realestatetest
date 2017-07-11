@@ -1,7 +1,7 @@
 #include "bowling.h"
 
 int main() {
-	removeme();
+	//removeme();
 	getscore();
 	return 0;
 }

@@ -7,6 +7,7 @@
 
 using namespace std;
 
+
 bool removeme()
 {
 	return true;
@@ -15,13 +16,58 @@ bool removeme()
 int getscore()
 {
 	vector<string> input;
-	return getscore(input);
+	vector<string> errormessages;
+	return getscore(input, errormessages);
 }
 
-int getscore(vector<string> input)
+void printmessage(vector<string>& errormessages, string message)
+{
+	errormessages.push_back(message);
+	cout<<message;
+}
+
+int calculate_scores(vector<short> &result)
+{
+	bool open_frame = false;
+	int framecount  = 0;
+	int total = 0;
+	for(auto value = result.begin(); framecount< BOWLING_MAX_FRAMES; value++)
+	{
+		if(open_frame) // frame is currently open, close it
+		{
+			framecount++;
+			open_frame = false;
+			if((*value) ==BOWLING_MIN_PINS) 
+				total+= 2 * BOWLING_MAX_PINS - *(value+1);
+			else
+				total+= BOWLING_MAX_PINS - *value;
+		}
+		else if((*value)==BOWLING_MIN_PINS)
+		{
+			framecount++;
+			if(*(value+1) ==BOWLING_MIN_PINS)
+				total += 3 * BOWLING_MAX_PINS - *(value+2);
+			else 
+				total += 2 * BOWLING_MAX_PINS - *(value+2);
+			
+		}
+		else 
+		{
+			open_frame = true;
+		}
+		
+	}
+	//cout<<"\n\n\n\n\n";
+	//for_each(result.begin(),result.end(),[](short s){cout<<s;});
+	//cout<<"\n\n\n\n\n";
+	//cout<<"\n\n\n\n\ntotal="<<total<<"\n\n\n\n";
+	return total;
+}
+
+int getscore(vector<string> input, vector<string>& errormesages)
 {
 	//
-	// returns: total score
+	// returns: total pins
 	//          -1 if interrupted by user
 	// 
 
@@ -31,66 +77,150 @@ int getscore(vector<string> input)
 	if(input.size())
 		reading_fromuser = false;
 
-	vector<short> scores;
+	vector<short> pinss;
+	int framecounts = 0;
 	//bool wait_snd_roll = false; // waiting second roll
 	//bool wait_trd_roll = false; // waiting third  roll
 	bool quit = false;
+	bool finished = false;
+	bool open_frame = false;
+	int open_remaining = 0;
+	//bool waitingstrike = false;
+	//bool waitingspare = false;
+	int  extrarolls = 0;
 	
 
-	while(true)
+	// input and validate data
+	while(!quit && !finished)
 	{
-		int score = nonumber;
+		int pins = nonumber;
+		int maxpins = open_frame ?  open_remaining : BOWLING_MAX_PINS;
 		
-		// get score
+		// ############################################
+		// get pins
+		// ############################################
 		if(!reading_fromuser)
 		{
 			if(input.size())
 			{
-				score = getnpins(input.front());					
+				pins = getnpins(input.front());					
 				input.erase(input.begin(),input.begin()+1);
 			}
-			else
-			{
-				break;
-			}
+			//else break; // ============================== REMOVE ME ==========================
 		}
 		else
 		{
-			string score_str;
-			cout<<"Enter number of remaining pins in this roll: from 0 to 10 (or 'q' to exit the program) and press 'enter': "<< endl;		  
-			cin>>score_str;
-			score = getnpins(score_str);
-			break;
+			string pins_str;
+			cout<<"Enter number of remaining pins in this roll: from " << BOWLING_MIN_PINS << " to " << maxpins << " (or 'q' to exit the program) and press 'enter': "<< endl;		  
+			cin>> pins_str;
+			pins = getnpins(pins_str);
 		}
 
-		// exit condition: user interrupt
-		if(score == -1)
+		// maximum allowed pins for this roll
+		//cout<<"open_frame="<<open_frame<<endl;
+		//cout<<"open_remaining="<<open_remaining<<endl;
+		//cout<<"maxpins="<<maxpins<<endl;
+
+		// ############################################
+		// check pins
+		// ############################################
+		if(pins == -1)
 		{
-			quit = true;
-			break;
+			quit = true;  // user exit code
 		}
+		else if(pins == -2 || pins == -3)
+		{
+			//errormesages.push_back(BOWLING_WRONG_INPUT_FORMAT);
+			//errormesages.push_back("dfd");
+			//cout<<"wrong input format"
+			printmessage(errormesages,BOWLING_WRONG_INPUT_FORMAT);
+			printmessage(errormesages,"\n");
 
-		// save score
+			printmessage(errormesages,BOWLING_WRONG_INPUT_INDICATE);
+			printmessage(errormesages,to_string(BOWLING_MIN_PINS));
+			printmessage(errormesages,BOWLING_WRONG_INPUT_INDICATE_2);
+			printmessage(errormesages,to_string(maxpins));
+			printmessage(errormesages,"\n");
+			// ... doing nothing at this iteration
+			
+		}
+		// non-negative pins
+		else if(pins > maxpins)
+		{
+			printmessage(errormesages,BOWLING_WRONG_INPUT_NUMBER);
+			printmessage(errormesages,"\n");
 
-		// increment number of frames
+			printmessage(errormesages,BOWLING_WRONG_INPUT_INDICATE);
+			printmessage(errormesages,to_string(BOWLING_MIN_PINS));
+			printmessage(errormesages,BOWLING_WRONG_INPUT_INDICATE_2);
+			printmessage(errormesages,to_string(maxpins));
+			printmessage(errormesages,"\n");
+			// .. doing nothing at this iteration
+		}
+		// ############################################
+		// pins are okay, incrementing
+		// ############################################
+		else
+		{
+			// save pins
+			pinss.push_back(pins);
+		
+			// open, close frame
+			if(framecounts < BOWLING_MAX_FRAMES )
+			{
+				if(open_frame) // frame is currently open - close it
+				{
+					open_frame = false;
+					framecounts++;
+					if(framecounts == BOWLING_MAX_FRAMES && pins==BOWLING_MIN_PINS) extrarolls++;
+					//if(pins==BOWLING_MIN_PINS) waitingstrike ++;
+					if(reading_fromuser) cout<<"Frame finished;"<<endl<<endl;
+					
+				}
+				else if(pins==BOWLING_MIN_PINS) //  strike
+				{
+					framecounts++;
+					if(framecounts == BOWLING_MAX_FRAMES) extrarolls+=2;
+					if(reading_fromuser) cout<<"Frame finished;"<<endl<<endl;
+				}
+				else  // open new frame
+				{
+					open_frame = true;
+					open_remaining = pins;
+				}
+			}
+			else
+			{
+				extrarolls--;
+			}
 
-		// trigger waiting for the second roll
+			
+			// finished condition
+			if(framecounts==BOWLING_MAX_FRAMES && extrarolls==0)
+			{
+				finished=true;
+			}
+		}	
+		
+		
 
-		// trigger waiting for the third roll
+		
 
-		// exit condition: 10 frames + no spares/strikes 
 
-		// exit condition: 10 frames + spare
 
-		// exit condition: 10 frames + strike
 
 	}
 
 	// All ok
 	if(quit)
+	{
+		cout<<"Quit the program. Bye!"<<endl;
 		return -1;
+	}
 	else
-		return nonumber;
+	{
+		return calculate_scores(pinss);
+	}
 }
 
 int getnpins(string& s)
@@ -98,7 +228,7 @@ int getnpins(string& s)
 	// returns n pins in this roll
 	// returns: -1 if quit
 	// returns: -2 if non-number characters
-	// returns: -3 if . or - in the string 
+	// returns: -3 if unkown error
 	string clean_string;	
 	bool found_non_digit = false;
 	int  found_quit  = 0;
@@ -113,8 +243,21 @@ int getnpins(string& s)
 			
 	});
 	
-	if(found_quit == 1 && !found_non_digit && !clean_string.size())
+	
+	if(clean_string.size() && ! found_non_digit && !found_quit)
+	{
+		int result;
+		try{
+			result = stoi(clean_string);
+		}
+		catch(int e){
+			result = -3;	
+		}
+		return result;
+	}
+	else if(found_quit == 1 && !found_non_digit && !clean_string.size())
 		return -1;
-	else
-		return 0;
+	else 
+		return -2;
+	
 }
